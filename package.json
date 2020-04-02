@@ -4,6 +4,14 @@
   "workspaces": [
     "packages/*"
   ],
+  "repository": {
+    "type" : "git",
+    "url": "ssh://git@github.com/rohmanhm/slate.git",
+    "directory": "packages/*"
+  },
+  "publishConfig": {
+    "registry":"https://npm.pkg.github.com/"
+  },
   "scripts": {
     "build": "yarn build:rollup && yarn build:next",
     "build:next": "cd ./site && next build && next export",
