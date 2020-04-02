@@ -6,11 +6,10 @@
   ],
   "repository": {
     "type" : "git",
-    "url": "ssh://git@github.com/rohmanhm/slate.git",
-    "directory": "packages/*"
+    "url": "ssh://git@github.com/rohmanhm/slate.git"
   },
   "publishConfig": {
-    "registry":"https://npm.pkg.github.com/"
+    "registry":"https://npm.fury.io/rohmanhm"
   },
   "scripts": {
     "build": "yarn build:rollup && yarn build:next",
