@@ -145,9 +145,20 @@ export const Editable = (props: EditableProps) => {
       return
     }
 
-    // If the DOM selection is already correct, we're done.
+    // verify that the dom selection is in the editor
+    const editorElement = EDITOR_TO_ELEMENT.get(editor)!
+    let hasDomSelectionInEditor = false
+    if (
+      editorElement.contains(domSelection.anchorNode) &&
+      editorElement.contains(domSelection.focusNode)
+    ) {
+      hasDomSelectionInEditor = true
+    }
+
+    // If the DOM selection is in the editor and the editor selection is already correct, we're done.
     if (
       hasDomSelection &&
+      hasDomSelectionInEditor &&
       selection &&
       Range.equals(ReactEditor.toSlateRange(editor, domSelection), selection)
     ) {
@@ -364,11 +375,21 @@ export const Editable = (props: EditableProps) => {
           IS_FOCUSED.delete(editor)
         }
 
-        if (
-          domSelection &&
-          hasEditableTarget(editor, domSelection.anchorNode) &&
-          hasEditableTarget(editor, domSelection.focusNode)
-        ) {
+        if (!domSelection) {
+          return Transforms.deselect(editor)
+        }
+
+        const { anchorNode, focusNode } = domSelection
+
+        const anchorNodeSelectable =
+          hasEditableTarget(editor, anchorNode) ||
+          isTargetInsideVoid(editor, anchorNode)
+
+        const focusNodeSelectable =
+          hasEditableTarget(editor, focusNode) ||
+          isTargetInsideVoid(editor, focusNode)
+
+        if (anchorNodeSelectable && focusNodeSelectable) {
           const range = ReactEditor.toSlateRange(editor, domSelection)
           Transforms.select(editor, range)
         } else {
@@ -708,7 +729,7 @@ export const Editable = (props: EditableProps) => {
               if (Hotkeys.isRedo(nativeEvent)) {
                 event.preventDefault()
 
-                if (editor.redo) {
+                if (typeof editor.redo === 'function') {
                   editor.redo()
                 }
 
@@ -718,7 +739,7 @@ export const Editable = (props: EditableProps) => {
               if (Hotkeys.isUndo(nativeEvent)) {
                 event.preventDefault()
 
-                if (editor.undo) {
+                if (typeof editor.undo === 'function') {
                   editor.undo()
                 }
 
@@ -975,6 +996,19 @@ const hasEditableTarget = (
     isDOMNode(target) &&
     ReactEditor.hasDOMNode(editor, target, { editable: true })
   )
+}
+
+/**
+ * Check if the target is inside void and in the editor.
+ */
+
+const isTargetInsideVoid = (
+  editor: ReactEditor,
+  target: EventTarget | null
+): boolean => {
+  const slateNode =
+    hasTarget(editor, target) && ReactEditor.toSlateNode(editor, target)
+  return Editor.isVoid(editor, slateNode)
 }
 
 /**
